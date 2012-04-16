@@ -1,6 +1,7 @@
 package au.edu.uq.cmm.tomcat.realm;
 import java.security.Principal;
-import java.util.Collections;
+import java.util.Arrays;
+import java.util.List;
 
 import org.apache.catalina.realm.GenericPrincipal;
 import org.apache.catalina.realm.RealmBase;
@@ -15,6 +16,8 @@ public class ACLSRealm extends RealmBase {
     private String dummyFacility;
     private String serverHost;
     private String localHostId;
+    private List roles = Arrays.asList(
+            new String[]{"ROLE_USER", "ROLE_ACLS_USER"});
     
     protected String getName() {
         return "ACLS";
@@ -25,10 +28,13 @@ public class ACLSRealm extends RealmBase {
     }
 
     protected Principal getPrincipal(String userName) {
-        return new GenericPrincipal(this, userName, "",
-                Collections.singletonList("ROLE_USER"));
+        return getPrincipal(userName, "");
     }
 
+    protected Principal getPrincipal(String userName, String password) {
+        return new GenericPrincipal(this, userName, password, roles);
+    }
+    
     public Principal authenticate(String username, String clientDigest,
             String nonce, String nc, String cnonce,
             String qop, String realm,
@@ -54,7 +60,7 @@ public class ACLSRealm extends RealmBase {
                     containerLog.trace(sm.getString("realmBase.authenticateSuccess",
                             userName));
                 }
-                res = getPrincipal(userName);
+                res = getPrincipal(userName, password);
             }
         } catch (AclsException ex) {
             containerLog.info("ACLS authentication failure", ex);
